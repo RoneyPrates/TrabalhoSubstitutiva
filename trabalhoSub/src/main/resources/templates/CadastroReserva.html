@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro e Busca de Reserva de Quarto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="date"],
+        input[type="number"],
+        select,
+        button[type="submit"],
+        button[type="button"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        button[type="button"],
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover,
+        button[type="button"]:hover {
+            background-color: #45a049;
+        }
+
+        #resultadoBusca {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #resultadoBusca ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #resultadoBusca ul li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>Cadastro de Reserva de Quarto</h2>
+<form id="formCadastro" action="/api/reserva" method="post" onsubmit="return validarFormularioCadastro()">
+    <label for="dataEntrada">Data de Entrada:</label><br>
+    <input type="date" id="dataEntrada" name="dataEntrada" required><br>
+
+    <label for="dataSaida">Data de Saída:</label><br>
+    <input type="date" id="dataSaida" name="dataSaida" required><br>
+
+    <label for="status">Status:</label><br>
+    <select id="status" name="status">
+        <option value="PENDENTE">Pendente</option>
+        <option value="ABERTO">Aberto</option>
+        <option value="FECHADO">Fechado</option>
+    </select><br>
+
+    <label for="fk_Hospede_id">ID do Hóspede:</label><br>
+    <input type="number" id="fk_Hospede_id" name="fk_Hospede_id" required><br>
+
+    <label for="fk_Quarto_id">ID do Quarto:</label><br>
+    <input type="number" id="fk_Quarto_id" name="fk_Quarto_id" required><br>
+
+    <button type="submit" name="action" value="cadastrar">Cadastrar Reserva</button>
+    <button type="button" onclick="atualizarReserva()">Atualizar Reserva</button>
+</form>
+
+<h2>Buscar Reserva de Quarto</h2>
+<form id="formBuscarTodos" action="/api/reserva" method="get" onsubmit="buscarTodasReservas(event)">
+    <button type="submit">Buscar Todas as Reservas</button>
+</form>
+
+<form id="formBuscarPorId" action="/api/reserva/{id}" method="get" onsubmit="buscarReservaPorId(event)">
+    <label for="idBuscar">ID da Reserva:</label><br>
+    <input type="number" id="idBuscar" name="idBuscar" required><br>
+    <button type="submit">Buscar Reserva por ID</button>
+</form>
+
+<div id="resultadoBusca"></div>
+
+<script>
+    function validarFormularioCadastro() {
+        var dataEntrada = new Date(document.getElementById('dataEntrada').value);
+        var dataSaida = new Date(document.getElementById('dataSaida').value);
+
+        if (dataEntrada >= dataSaida) {
+            alert('A data de saída deve ser posterior à data de entrada.');
+            return false;
+        }
+
+        var valorTotal = parseFloat(document.getElementById('valorTotal').value);
+        if (valorTotal <= 0 || isNaN(valorTotal)) {
+            alert('O valor total da reserva deve ser maior que zero.');
+            return false;
+        }
+
+        var idHospede = parseInt(document.getElementById('fk_Hospede_id').value, 10);
+        if (isNaN(idHospede) || idHospede <= 0) {
+            alert('ID do hóspede inválido.');
+            return false;
+        }
+
+        var idQuarto = parseInt(document.getElementById('fk_Quarto_id').value, 10);
+        if (isNaN(idQuarto) || idQuarto <= 0) {
+            alert('ID do quarto inválido.');
+            return false;
+        }
+
+        return true;
+    }
+
+    function buscarTodasReservas(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarTodos');
+        var url = form.getAttribute('action');
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar todas as reservas:', error));
+    }
+
+    function buscarReservaPorId(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarPorId');
+        var idReserva = document.getElementById('idBuscar').value;
+        var url = form.getAttribute('action').replace('{id}', idReserva);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado([data]))
+            .catch(error => console.error('Erro ao buscar reserva por ID:', error));
+    }
+
+    function exibirResultado(reservas) {
+        var resultadoDiv = document.getElementById('resultadoBusca');
+        resultadoDiv.innerHTML = '';
+
+        if (reservas.length === 0) {
+            resultadoDiv.innerHTML = '<p>Nenhuma reserva encontrada.</p>';
+            return;
+        }
+
+        var html = '<h3>Resultado da Busca</h3>';
+        html += '<ul>';
+        reservas.forEach(function(reserva) {
+            html += '<li>ID: ' + reserva.id + ', Data de Entrada: ' + reserva.data_entrada + ', Data de Saída: ' + reserva.data_saida + ', Status: ' + reserva.status + ', Valor Total: ' + reserva.valorTotal + '</li>';
+        });
+        html += '</ul>';
+
+        resultadoDiv.innerHTML = html;
+    }
+
+    function atualizarReserva() {
+        var idReserva = prompt('Digite o ID da reserva que deseja atualizar:');
+        if (idReserva != null) {
+            window.location.href = '/atualizarReserva.html?id=' + idReserva;
+        }
+    }
+</script>
+</body>
+</html>

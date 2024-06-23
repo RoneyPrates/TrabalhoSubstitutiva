@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta de Quartos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="number"],
+        select,
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        #resultadoBusca {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #resultadoBusca ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #resultadoBusca ul li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>Consulta de Quartos</h2>
+
+<form id="formBuscarQuartosDisponiveis" action="/api/quarto/buscarDisponiveis" method="get" onsubmit="buscarQuartosDisponiveis(event)">
+    <button type="submit">Buscar Quartos Disponíveis</button>
+</form>
+
+<form id="formBuscarPorOcupantes" action="/api/quarto/buscarPorOcupantes" method="get" onsubmit="buscarQuartosPorOcupantes(event)">
+    <label for="quantidadeOcupantes">Quantidade de Ocupantes:</label><br>
+    <input type="number" id="quantidadeOcupantes" name="quantidadeOcupantes" required><br>
+    <button type="submit">Buscar por Quantidade de Ocupantes</button>
+</form>
+
+<form id="formBuscarQuartosOcupados" action="/api/quarto/buscarOcupados" method="get" onsubmit="buscarQuartosOcupados(event)">
+    <button type="submit">Buscar Quartos Ocupados</button>
+</form>
+
+<form id="formBuscarQuartosComVistaMar" action="/api/quarto/buscarComVistaMar" method="get" onsubmit="buscarQuartosComVistaMar(event)">
+    <button type="submit">Buscar Quartos com Vista para o Mar Disponíveis</button>
+</form>
+
+<div id="resultadoBusca"></div>
+
+<script>
+    function buscarQuartosDisponiveis(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarQuartosDisponiveis');
+        var url = form.getAttribute('action');
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar quartos disponíveis:', error));
+    }
+
+    function buscarQuartosPorOcupantes(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarPorOcupantes');
+        var quantidadeOcupantes = document.getElementById('quantidadeOcupantes').value;
+        var url = form.getAttribute('action') + '?quantidadeOcupantes=' + quantidadeOcupantes;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar quartos por quantidade de ocupantes:', error));
+    }
+
+    function buscarQuartosOcupados(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarQuartosOcupados');
+        var url = form.getAttribute('action');
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar quartos ocupados:', error));
+    }
+
+    function buscarQuartosComVistaMar(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarQuartosComVistaMar');
+        var url = form.getAttribute('action');
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar quartos com vista para o mar disponíveis:', error));
+    }
+
+    function exibirResultado(quartos) {
+        var resultadoDiv = document.getElementById('resultadoBusca');
+        resultadoDiv.innerHTML = '';
+
+        if (quartos.length === 0) {
+            resultadoDiv.innerHTML = '<p>Nenhum quarto encontrado.</p>';
+            return;
+        }
+
+        var html = '<h3>Resultado da Busca</h3>';
+        html += '<ul>';
+        quartos.forEach(function(quarto) {
+            html += '<li>ID: ' + quarto.id + ', Número: ' + quarto.numero + ', Capacidade: ' + quarto.capacidade + ', Vista para o Mar: ' + (quarto.vistaMar ? 'Sim' : 'Não') + '</li>';
+        });
+        html += '</ul>';
+
+        resultadoDiv.innerHTML = html;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Reservas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="date"],
+        input[type="number"],
+        select,
+        button[type="submit"],
+        button[type="button"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        button[type="button"],
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover,
+        button[type="button"]:hover {
+            background-color: #45a049;
+        }
+
+        #resultadoBusca {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #resultadoBusca ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #resultadoBusca ul li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>Controle de Reservas</h2>
+
+<form id="formBuscarPorHospede" action="/api/reserva/buscarPorHospede" method="get" onsubmit="buscarReservaPorHospede(event)">
+    <label for="idHospede">ID do Hóspede:</label><br>
+    <input type="number" id="idHospede" name="idHospede" required><br>
+    <button type="submit">Buscar por Hóspede</button>
+</form>
+
+<form id="formBuscarPorId" action="/api/reserva/{id}" method="get" onsubmit="buscarReservaPorId(event)">
+    <label for="idBuscar">ID da Reserva:</label><br>
+    <input type="number" id="idBuscar" name="idBuscar" required><br>
+    <button type="submit">Buscar por ID</button>
+</form>
+
+<form id="formBuscarPorDataEntrada" action="/api/reserva/buscarPorDataEntrada" method="get" onsubmit="buscarReservaPorDataEntrada(event)">
+    <label for="dataEntrada">Data de Entrada:</label><br>
+    <input type="date" id="dataEntrada" name="dataEntrada" required><br>
+    <button type="submit">Buscar por Data de Entrada</button>
+</form>
+
+<div id="resultadoBusca"></div>
+
+<script>
+    function buscarReservaPorHospede(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarPorHospede');
+        var idHospede = document.getElementById('idHospede').value;
+        var url = form.getAttribute('action') + '?idHospede=' + idHospede;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar reservas por hóspede:', error));
+    }
+
+    function buscarReservaPorId(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarPorId');
+        var idReserva = document.getElementById('idBuscar').value;
+        var url = form.getAttribute('action').replace('{id}', idReserva);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado([data]))
+            .catch(error => console.error('Erro ao buscar reserva por ID:', error));
+    }
+
+    function buscarReservaPorDataEntrada(event) {
+        event.preventDefault();
+        var form = document.getElementById('formBuscarPorDataEntrada');
+        var dataEntrada = document.getElementById('dataEntrada').value;
+        var url = form.getAttribute('action') + '?dataEntrada=' + dataEntrada;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => exibirResultado(data))
+            .catch(error => console.error('Erro ao buscar reservas por data de entrada:', error));
+    }
+
+    function exibirResultado(reservas) {
+        var resultadoDiv = document.getElementById('resultadoBusca');
+        resultadoDiv.innerHTML = '';
+
+        if (reservas.length === 0) {
+            resultadoDiv.innerHTML = '<p>Nenhuma reserva encontrada.</p>';
+            return;
+        }
+
+        var html = '<h3>Resultado da Busca</h3>';
+        html += '<ul>';
+        reservas.forEach(function(reserva) {
+            html += '<li>ID: ' + reserva.id + ', Data de Entrada: ' + reserva.data_entrada + ', Data de Saída: ' + reserva.data_saida + ', Status: ' + reserva.status + ', Valor Total: ' + reserva.valorTotal + '</li>';
+        });
+        html += '</ul>';
+
+        resultadoDiv.innerHTML = html;
+    }
+</script>
+</body>
+</html>
